@@ -1926,7 +1926,7 @@ do_deferred_options (struct context *c, const unsigned int found)
                        " MTU problems", TUN_MTU_SIZE(&c->c2.frame) );
 	}
     }
-
+#if P2MP
   /* process (potentially pushed) crypto options */
   if (c->options.pull)
     {
@@ -1941,6 +1941,7 @@ do_deferred_options (struct context *c, const unsigned int found)
 	  return false;
 	}
     }
+#endif
 #endif
   return true;
 }
@@ -2169,6 +2170,7 @@ do_init_crypto_static (struct context *c, const unsigned int flags)
 			       options->use_iv);
 }
 
+#if P2MP
 /*
  * Initialize the persistent component of OpenVPN's TLS mode,
  * which is preserved across SIGUSR1 resets.
@@ -2243,11 +2245,11 @@ do_init_crypto_tls_c1 (struct context *c)
 	  tls_crypt_init_key (&c->c1.ks.tls_wrap_key, options->tls_crypt_file,
 	      options->tls_crypt_inline, options->tls_server);
       }
-
+#if P2MP
       c->c1.ciphername = options->ciphername;
       c->c1.authname = options->authname;
       c->c1.keysize = options->keysize;
-
+#endif
 #if 0 /* was: #if ENABLE_INLINE_FILES --  Note that enabling this code will break restarts */
       if (options->priv_key_file_inline)
 	{
@@ -2259,11 +2261,12 @@ do_init_crypto_tls_c1 (struct context *c)
   else
     {
       msg (D_INIT_MEDIUM, "Re-using SSL/TLS context");
-
+#if P2MP
       /* Restore pre-NCP cipher options */
       c->options.ciphername = c->c1.ciphername;
       c->options.authname = c->c1.authname;
       c->options.keysize = c->c1.keysize;
+#endif
     }
 }
 
@@ -2293,7 +2296,7 @@ do_init_crypto_tls (struct context *c, const unsigned int flags)
 
   /* In short form, unique datagram identifier is 32 bits, in long form 64 bits */
   packet_id_long_form = cipher_kt_mode_ofb_cfb (c->c1.ks.key_type.cipher);
-
+#if P2MP
   /* Compute MTU parameters (postpone if we push/pull options) */
   if (c->options.pull || c->options.mode == MODE_SERVER)
     {
@@ -2301,6 +2304,7 @@ do_init_crypto_tls (struct context *c, const unsigned int flags)
       frame_add_to_extra_frame (&c->c2.frame, crypto_max_overhead());
     }
   else
+#endif
     {
       crypto_adjust_frame_parameters(&c->c2.frame, &c->c1.ks.key_type,
 	  options->use_iv, options->replay, packet_id_long_form);
@@ -2479,7 +2483,7 @@ do_init_finalize_tls_frame (struct context *c)
 		   "TLS-Auth MTU parms");
     }
 }
-
+#endif
 /*
  * No encryption or authentication.
  */
@@ -2498,8 +2502,10 @@ do_init_crypto (struct context *c, const unsigned int flags)
 #ifdef ENABLE_CRYPTO
   if (c->options.shared_secret_file)
     do_init_crypto_static (c, flags);
+#if P2MP
   else if (c->options.tls_server || c->options.tls_client)
     do_init_crypto_tls (c, flags);
+#endif
   else				/* no encryption or authentication. */
     do_init_crypto_none (c);
 #else /* ENABLE_CRYPTO */
@@ -3616,10 +3622,10 @@ init_instance (struct context *c, const struct env_set *env, const unsigned int 
 
   /* initialize MTU variables */
   do_init_frame (c);
-
+#if P2MP
   /* initialize TLS MTU variables */
   do_init_frame_tls (c);
-
+#endif
   /* init workspace buffers whose size is derived from frame size */
   if (c->mode == CM_P2P || c->mode == CM_CHILD_TCP)
     do_init_buffers (c);
@@ -3812,10 +3818,12 @@ inherit_context_child (struct context *dest,
   dest->c1.ks.ssl_ctx = src->c1.ks.ssl_ctx;
   dest->c1.ks.tls_wrap_key = src->c1.ks.tls_wrap_key;
   dest->c1.ks.tls_auth_key_type = src->c1.ks.tls_auth_key_type;
+#if P2MP
   /* inherit pre-NCP ciphers */
   dest->c1.ciphername = src->c1.ciphername;
   dest->c1.authname = src->c1.authname;
   dest->c1.keysize = src->c1.keysize;
+#endif
 #endif
 
   /* options */

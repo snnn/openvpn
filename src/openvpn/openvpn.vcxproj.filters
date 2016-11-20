@@ -216,6 +216,18 @@
     <ClCompile Include="comp-lz4.c">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="argv.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="block_dns.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="console_builtin.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="tls_crypt.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="base64.h">

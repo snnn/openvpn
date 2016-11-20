@@ -2640,7 +2640,7 @@ options_postprocess_mutate (struct options *o)
   ASSERT (o->connection_list);
   for (i = 0; i < o->connection_list->len; ++i)
 	options_postprocess_mutate_ce (o, o->connection_list->array[i]);
-
+#if P2MP_SERVER
 #ifdef ENABLE_CRYPTO
   if (o->tls_server)
     {
@@ -2659,7 +2659,7 @@ options_postprocess_mutate (struct options *o)
       o->ncp_enabled = false;
     }
 #endif
-
+#endif
 #if ENABLE_MANAGEMENT
   if (o->http_proxy_override)
 	options_postprocess_http_proxy_override(o);
@@ -3046,6 +3046,7 @@ static size_t
 calc_options_string_link_mtu(const struct options *o, const struct frame *frame)
 {
   size_t link_mtu = EXPANDED_SIZE (frame);
+#if P2MP_SERVER
 #ifdef ENABLE_CRYPTO
   if (o->pull || o->mode == MODE_SERVER)
     {
@@ -3062,6 +3063,7 @@ calc_options_string_link_mtu(const struct options *o, const struct frame *frame)
 	  EXPANDED_SIZE (&fake_frame));
       link_mtu = EXPANDED_SIZE (&fake_frame);
     }
+#endif
 #endif
   return link_mtu;
 }
@@ -3900,6 +3902,11 @@ in_src_get (const struct in_src *is, char *line, const int size)
       return false;
     }
 }
+
+#ifdef P2MP_SERVER
+#undef P2MP_SERVER
+#define P2MP_SERVER 0
+#endif
 
 static char *
 read_inline_file (struct in_src *is, const char *close_tag, struct gc_arena *gc)
